@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Consciousness — Blanket · Variations + Viz</title>
+  <title>Consciousness — Blanket · Variations + Viz (v2)</title>
   <style>
     :root {
       --bg: #0b0e13;
@@ -42,12 +42,7 @@
       transition: background .25s ease, color .25s ease;
     }
 
-    header {
-      max-width: 1100px;
-      margin: 32px auto 16px;
-      padding: 0 20px;
-    }
-
+    header { max-width: 1100px; margin: 32px auto 16px; padding: 0 20px; }
     h1 { margin: 0 0 6px; font-size: clamp(24px, 3vw, 36px); letter-spacing: 0.2px; }
     .subtitle { margin: 0 0 16px; color: var(--muted); font-size: 0.98rem; }
 
@@ -119,7 +114,7 @@
 <body>
   <header>
     <h1>“Consciousness is a Blanket” — Variations</h1>
-    <p class="subtitle">Five stylistic cuts of the same idea. Toggle theme, switch fonts, copy variants, and explore an animated elliptic field inspired by Julia/Mandelbrot dynamics.</p>
+    <p class="subtitle">Now with two fresh epigrams: “The beginnings of a technocratic proto‑religion.” and “Shining in the dark.” Explore seven mapped patterns in the animated elliptic field.</p>
     <div class="controls" role="group" aria-label="Display Controls">
       <button class="btn" id="themeToggle" aria-label="Toggle theme">🌗 Toggle theme</button>
       <div class="select-wrap" title="Choose font">
@@ -155,6 +150,8 @@
               <option value="3">3 · Poetic cut</option>
               <option value="4">4 · Technical‑poetic</option>
               <option value="5">5 · Street‑wise</option>
+              <option value="6">6 · Proto‑religion</option>
+              <option value="7">7 · Shining in the dark</option>
             </select>
           </div>
         </div>
@@ -213,6 +210,26 @@
         </blockquote>
         <div class="row"><button class="btn copy-btn">Copy</button></div>
       </article>
+
+      <!-- Card 6 -->
+      <article class="card" data-quote="The beginnings of a technocratic proto-religion. — HM">
+        <div class="label">6 · Proto‑religion <span class="kicker">(epigram)</span></div>
+        <blockquote>
+          <p>“The beginnings of a technocratic proto-religion.”</p>
+          <footer>&mdash; HM</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
+
+      <!-- Card 7 -->
+      <article class="card" data-quote="Shining in the dark. — HM">
+        <div class="label">7 · Shining in the dark <span class="kicker">(epigram)</span></div>
+        <blockquote>
+          <p>“Shining in the dark.”</p>
+          <footer>&mdash; HM</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
     </section>
   </main>
 
@@ -239,10 +256,7 @@
 
       // --- Font ---
       const savedFont = localStorage.getItem('quoteFont');
-      if (savedFont) {
-        body.setAttribute('data-font', savedFont);
-        fontSelect.value = savedFont;
-      }
+      if (savedFont) { body.setAttribute('data-font', savedFont); fontSelect.value = savedFont; }
       fontSelect.addEventListener('change', () => {
         const val = fontSelect.value;
         if (val === 'default') body.removeAttribute('data-font');
@@ -256,10 +270,8 @@
         btn.addEventListener('click', async (e) => {
           const card = e.currentTarget.closest('.card');
           const text = card.getAttribute('data-quote');
-          try {
-            await navigator.clipboard.writeText(text);
-            ping('Copied!');
-          } catch(err) { fallbackCopy(text); }
+          try { await navigator.clipboard.writeText(text); ping('Copied!'); }
+          catch(err) { fallbackCopy(text); }
         });
       });
 
@@ -273,10 +285,8 @@
 
       function ping(msg) {
         const span = toast.querySelector('span');
-        span.textContent = msg;
-        toast.classList.add('show');
-        clearTimeout(ping._t);
-        ping._t = setTimeout(() => toast.classList.remove('show'), 1200);
+        span.textContent = msg; toast.classList.add('show');
+        clearTimeout(ping._t); ping._t = setTimeout(() => toast.classList.remove('show'), 1200);
       }
 
       function fallbackCopy(text) {
@@ -300,13 +310,15 @@
       const quoteSelect = document.getElementById('quoteSelect');
       const legend = document.getElementById('legend');
 
-      // Five constants (Julia-like), one for each quote
+      // Seven constants (Julia-like), one for each quote/epigram
       const C = [
         { re: -0.4,    im:  0.6 },
         { re:  0.285,  im:  0.0 },
         { re: -0.8,    im:  0.156 },
         { re: -0.123,  im:  0.745 },
-        { re: -0.70176,im: -0.3842 }
+        { re: -0.70176,im: -0.3842 },
+        { re:  0.32,   im:  0.043 },
+        { re: -0.2,    im:  0.66 }
       ];
 
       const labels = [
@@ -314,19 +326,21 @@
         '2 · Physics diction',
         '3 · Poetic cut',
         '4 · Technical‑poetic',
-        '5 · Street‑wise'
+        '5 · Street‑wise',
+        '6 · Proto‑religion',
+        '7 · Shining in the dark'
       ];
 
       // Colors per quote (distinct hues)
       function colorFor(i, a=1){
-        const h = (i*72 + 30) % 360; // spread around wheel
+        const h = (i*(360/labels.length) + 30) % 360; // spread uniformly
         return `hsla(${h} 70% 62% / ${a})`;
       }
 
       // Legend build
       function buildLegend(){
         legend.innerHTML = '';
-        for(let i=0;i<5;i++){
+        for(let i=0;i<labels.length;i++){
           const el = document.createElement('span');
           el.className = 'item';
           el.innerHTML = `<span class="dot" style="background:${colorFor(i,1)}"></span>${labels[i]}`;
@@ -375,7 +389,7 @@
 
       function syncCardHighlight(){
         cards.forEach(c=>c.classList.remove('active'));
-        const v = +quoteSelect.value; if(v>0) cards[v-1].classList.add('active');
+        const v = +quoteSelect.value; if(v>0 && v<=cards.length) cards[v-1].classList.add('active');
       }
       syncCardHighlight();
 
@@ -396,7 +410,7 @@
         const thetaShift = frame * 0.012;
 
         const which = +quoteSelect.value; // 0 = all
-        const indices = which===0 ? [0,1,2,3,4] : [which-1];
+        const indices = which===0 ? [...Array(C.length).keys()] : [which-1];
 
         indices.forEach((idx)=>{
           const c = C[idx];
