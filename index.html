@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Consciousness — Blanket · Variations + Viz</title>
+  <style>
+    :root {
+      --bg: #0b0e13;
+      --fg: #e9edf3;
+      --muted: #98a2b3;
+      --card-bg: #121723;
+      --card-border: #232a3a;
+      --accent: #7aa2ff;
+      --accent-2: #9d7aff;
+      --shadow: rgba(0, 0, 0, 0.25);
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --radius: 16px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f7f8fb;
+      --fg: #0f172a;
+      --muted: #475569;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --accent: #2557e0;
+      --accent-2: #7c3aed;
+      --shadow: rgba(2, 8, 23, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(122,162,255,.12), transparent 60%),
+                  radial-gradient(1000px 700px at 110% 10%, rgba(157,122,255,.10), transparent 60%),
+                  var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      line-height: 1.5;
+      transition: background .25s ease, color .25s ease;
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 32px auto 16px;
+      padding: 0 20px;
+    }
+
+    h1 { margin: 0 0 6px; font-size: clamp(24px, 3vw, 36px); letter-spacing: 0.2px; }
+    .subtitle { margin: 0 0 16px; color: var(--muted); font-size: 0.98rem; }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+
+    .btn, select {
+      appearance: none; border: 1px solid var(--card-border);
+      background: linear-gradient(180deg, var(--card-bg), color-mix(in oklab, var(--card-bg), #000 6%));
+      color: var(--fg); padding: 10px 14px; border-radius: 12px;
+      font-size: 0.95rem; cursor: pointer; transition: transform .05s ease, border-color .2s ease, box-shadow .2s ease;
+      box-shadow: 0 1px 0 var(--shadow);
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn:hover, select:hover { border-color: color-mix(in oklab, var(--accent), var(--card-border) 40%); }
+    select { padding-right: 38px; }
+    .select-wrap { position: relative; display: inline-block; }
+    .select-wrap::after { content: "▾"; position: absolute; right: 12px; top: 50%; transform: translateY(-48%); font-size: .9rem; color: var(--muted); pointer-events: none; }
+
+    main { max-width: 1100px; margin: 12px auto 56px; padding: 0 20px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+    .card {
+      background: linear-gradient(180deg, var(--card-bg), color-mix(in oklab, var(--card-bg), #000 6%));
+      border: 1px solid var(--card-border); border-radius: var(--radius);
+      padding: 18px 18px 14px; box-shadow: 0 8px 26px -16px var(--shadow);
+      position: relative; overflow: hidden;
+    }
+
+    .label { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; color: var(--accent); letter-spacing: .25px; margin-bottom: 10px; }
+
+    blockquote { margin: 0 0 14px 0; font-size: clamp(16px, 2.2vw, 22px); font-style: italic; }
+    blockquote footer { margin-top: 8px; color: var(--muted); font-style: normal; font-size: .95rem; }
+
+    .row { display: flex; gap: 8px; justify-content: flex-end; }
+    .copy-btn { border: 1px dashed color-mix(in oklab, var(--accent), var(--card-border) 35%); }
+
+    .toast { position: fixed; inset-inline: 0; bottom: 18px; display: grid; place-items: center; pointer-events: none; }
+    .toast > span { background: color-mix(in oklab, var(--card-bg), var(--accent) 14%); color: var(--fg); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 12px; font-size: .95rem; box-shadow: 0 10px 30px -18px var(--shadow); opacity: 0; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease; }
+    .toast.show > span { opacity: 1; transform: translateY(0); }
+
+    .kicker { color: var(--muted); font-size: .85rem; letter-spacing: .25px; }
+
+    /* Font presets */
+    body[data-font="serif"] { --font: Georgia, Cambria, "Times New Roman", Times, serif; }
+    body[data-font="mono"] { --font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* Visualization card */
+    .viz-card { margin-bottom: 18px; display:flex; flex-direction: column; gap:12px; }
+    .viz-head { display:flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .viz-controls { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+    .viz-controls .btn, .viz-controls input[type="range"], .viz-controls select { font-size: .9rem; }
+    .viz-canvas-wrap { width: 100%; aspect-ratio: 21 / 9; background:
+        radial-gradient(600px 400px at 20% -10%, color-mix(in oklab, var(--accent), transparent 86%), transparent 60%),
+        radial-gradient(800px 500px at 120% 10%, color-mix(in oklab, var(--accent-2), transparent 86%), transparent 60%),
+        linear-gradient(180deg, color-mix(in oklab, var(--card-bg), #000 4%), color-mix(in oklab, var(--card-bg), #000 8%));
+      border: 1px dashed var(--card-border); border-radius: var(--radius); overflow: hidden; position: relative; }
+    canvas#viz { display:block; width:100%; height:100%; }
+
+    /* Legend */
+    .legend { display:flex; gap:14px; flex-wrap: wrap; color: var(--muted); font-size: .9rem; }
+    .legend .item { display:inline-flex; align-items:center; gap:8px; }
+    .legend .dot { width:10px; height:10px; border-radius:50%; display:inline-block; box-shadow: 0 2px 6px -2px var(--shadow); border: 1px solid var(--card-border); }
+
+    /* Active highlight for selected card */
+    .card.active { outline: 2px solid color-mix(in oklab, var(--accent), var(--card-border) 30%); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>“Consciousness is a Blanket” — Variations</h1>
+    <p class="subtitle">Five stylistic cuts of the same idea. Toggle theme, switch fonts, copy variants, and explore an animated elliptic field inspired by Julia/Mandelbrot dynamics.</p>
+    <div class="controls" role="group" aria-label="Display Controls">
+      <button class="btn" id="themeToggle" aria-label="Toggle theme">🌗 Toggle theme</button>
+      <div class="select-wrap" title="Choose font">
+        <select id="fontSelect" aria-label="Font selector">
+          <option value="default">Sans (default)</option>
+          <option value="serif">Serif</option>
+          <option value="mono">Mono</option>
+        </select>
+      </div>
+      <button class="btn" id="copyAll" aria-label="Copy all quotes">📋 Copy all</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Visualization card (animated ellipses inspired by Mandelbrot/Julia dynamics) -->
+    <section class="card viz-card" id="vizCard">
+      <div class="viz-head">
+        <div>
+          <div class="label">Elliptic Field <span class="kicker">(playable frames)</span></div>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="viz-controls" role="group" aria-label="Animation controls">
+          <button class="btn" id="animPlay" aria-label="Play/Pause">▶ Play</button>
+          <label class="kicker" for="frame">Frame</label>
+          <input id="frame" type="range" min="0" max="600" value="0"/>
+          <label class="kicker" for="speed">Speed</label>
+          <input id="speed" type="range" min="1" max="60" value="24"/>
+          <div class="select-wrap" title="Choose focus">
+            <select id="quoteSelect" aria-label="Select quote to depict">
+              <option value="0">All quotes</option>
+              <option value="1">1 · Exact</option>
+              <option value="2">2 · Physics diction</option>
+              <option value="3">3 · Poetic cut</option>
+              <option value="4">4 · Technical‑poetic</option>
+              <option value="5">5 · Street‑wise</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="viz-canvas-wrap"><canvas id="viz"></canvas></div>
+      <p class="kicker">Tip: click a quote card below to focus its pattern. Use the slider to scrub frames, or press Play to animate.</p>
+    </section>
+
+    <section class="grid" id="grid">
+      <!-- Card 1 -->
+      <article class="card" data-quote="Consciousness is inflatory, and comes to rest, like a blanket over civilization. — Hrishi Mukherjee">
+        <div class="label">1 · Exact <span class="kicker">(as written)</span></div>
+        <blockquote>
+          <p>“Consciousness is <em>inflatory</em>, and comes to rest, like a blanket over civilization.”</p>
+          <footer>&mdash; Hrishi Mukherjee</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="card" data-quote="Consciousness is inflationary, and comes to rest like a blanket over civilization. — Hrishi Mukherjee">
+        <div class="label">2 · Physics diction <span class="kicker">(standard)</span></div>
+        <blockquote>
+          <p>“Consciousness is <em>inflationary</em>, and comes to rest like a blanket over civilization.”</p>
+          <footer>&mdash; Hrishi Mukherjee</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="card" data-quote="Consciousness expands, then settles—blanketing civilization. — Hrishi Mukherjee">
+        <div class="label">3 · Poetic cut</div>
+        <blockquote>
+          <p>“Consciousness expands, then settles—blanketing civilization.”</p>
+          <footer>&mdash; Hrishi Mukherjee</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
+
+      <!-- Card 4 -->
+      <article class="card" data-quote="Consciousness undergoes a burst of inflation, then thermalizes—resting over civilization like a blanket. — Hrishi Mukherjee">
+        <div class="label">4 · Technical‑poetic</div>
+        <blockquote>
+          <p>“Consciousness undergoes a burst of inflation, then thermalizes—resting over civilization like a blanket.”</p>
+          <footer>&mdash; Hrishi Mukherjee</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
+
+      <!-- Card 5 -->
+      <article class="card" data-quote="Consciousness blows up big, then lays down over us all. — Hrishi Mukherjee">
+        <div class="label">5 · Street‑wise</div>
+        <blockquote>
+          <p>“Consciousness blows up big, then lays down over us all.”</p>
+          <footer>&mdash; Hrishi Mukherjee</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><span></span></div>
+
+  <script>
+    (function() {
+      const body = document.body;
+      const themeToggle = document.getElementById('themeToggle');
+      const fontSelect = document.getElementById('fontSelect');
+      const copyAllBtn = document.getElementById('copyAll');
+      const toast = document.getElementById('toast');
+
+      // --- Theme ---
+      const savedTheme = localStorage.getItem('quoteTheme');
+      if (savedTheme) body.setAttribute('data-theme', savedTheme);
+
+      themeToggle.addEventListener('click', () => {
+        const current = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', current);
+        localStorage.setItem('quoteTheme', current);
+        ping(`Theme: ${current}`);
+      });
+
+      // --- Font ---
+      const savedFont = localStorage.getItem('quoteFont');
+      if (savedFont) {
+        body.setAttribute('data-font', savedFont);
+        fontSelect.value = savedFont;
+      }
+      fontSelect.addEventListener('change', () => {
+        const val = fontSelect.value;
+        if (val === 'default') body.removeAttribute('data-font');
+        else body.setAttribute('data-font', val);
+        localStorage.setItem('quoteFont', val);
+        ping(`Font: ${val === 'default' ? 'sans' : val}`);
+      });
+
+      // --- Copy single ---
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const card = e.currentTarget.closest('.card');
+          const text = card.getAttribute('data-quote');
+          try {
+            await navigator.clipboard.writeText(text);
+            ping('Copied!');
+          } catch(err) { fallbackCopy(text); }
+        });
+      });
+
+      // --- Copy all ---
+      copyAllBtn.addEventListener('click', async () => {
+        const all = Array.from(document.querySelectorAll('.card')).map(c => '• ' + c.getAttribute('data-quote'));
+        const blob = all.join('\n');
+        try { await navigator.clipboard.writeText(blob); ping('All variations copied'); }
+        catch(err) { fallbackCopy(blob); }
+      });
+
+      function ping(msg) {
+        const span = toast.querySelector('span');
+        span.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(ping._t);
+        ping._t = setTimeout(() => toast.classList.remove('show'), 1200);
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta);
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        ta.focus(); ta.select();
+        try { document.execCommand('copy'); ping('Copied (fallback)'); }
+        catch(e) { alert('Copy failed. Select text manually.'); }
+        finally { document.body.removeChild(ta); }
+      }
+
+      // =====================
+      //  Elliptic Fractal Viz
+      // =====================
+      const canvas = document.getElementById('viz');
+      const ctx = canvas.getContext('2d');
+      const frameSlider = document.getElementById('frame');
+      const speedSlider = document.getElementById('speed');
+      const playBtn = document.getElementById('animPlay');
+      const quoteSelect = document.getElementById('quoteSelect');
+      const legend = document.getElementById('legend');
+
+      // Five constants (Julia-like), one for each quote
+      const C = [
+        { re: -0.4,    im:  0.6 },
+        { re:  0.285,  im:  0.0 },
+        { re: -0.8,    im:  0.156 },
+        { re: -0.123,  im:  0.745 },
+        { re: -0.70176,im: -0.3842 }
+      ];
+
+      const labels = [
+        '1 · Exact',
+        '2 · Physics diction',
+        '3 · Poetic cut',
+        '4 · Technical‑poetic',
+        '5 · Street‑wise'
+      ];
+
+      // Colors per quote (distinct hues)
+      function colorFor(i, a=1){
+        const h = (i*72 + 30) % 360; // spread around wheel
+        return `hsla(${h} 70% 62% / ${a})`;
+      }
+
+      // Legend build
+      function buildLegend(){
+        legend.innerHTML = '';
+        for(let i=0;i<5;i++){
+          const el = document.createElement('span');
+          el.className = 'item';
+          el.innerHTML = `<span class="dot" style="background:${colorFor(i,1)}"></span>${labels[i]}`;
+          legend.appendChild(el);
+        }
+      }
+      buildLegend();
+
+      // Canvas sizing with DPR + ResizeObserver
+      let W=0, H=0, DPR=1; const ro = new ResizeObserver(sizeCanvas); ro.observe(canvas.parentElement);
+      function sizeCanvas(){
+        const rect = canvas.parentElement.getBoundingClientRect();
+        DPR = Math.min(2, window.devicePixelRatio || 1);
+        W = Math.max(300, rect.width); H = Math.max(160, rect.height);
+        canvas.width = Math.floor(W*DPR); canvas.height = Math.floor(H*DPR);
+        canvas.style.width = W+'px'; canvas.style.height = H+'px';
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+        draw();
+      }
+
+      // Complex helpers
+      function cMul(a,b){ return {re:a.re*b.re - a.im*b.im, im:a.re*b.im + a.im*b.re}; }
+      function cAdd(a,b){ return {re:a.re+b.re, im:a.im+b.im}; }
+      function cArg(a){ return Math.atan2(a.im, a.re); }
+
+      // Animation state
+      let running = false; let raf = null; let frame = 0; let fps = 24; let lastT=0; const totalFrames = 600;
+      frameSlider.addEventListener('input', ()=>{ frame = +frameSlider.value; draw(); });
+      speedSlider.addEventListener('input', ()=>{ fps = +speedSlider.value; });
+
+      playBtn.addEventListener('click', ()=>{
+        running = !running; playBtn.textContent = running ? '⏸ Pause' : '▶ Play';
+        if(running){ lastT = performance.now(); loop(lastT); }
+        else { cancelAnimationFrame(raf); raf=null; }
+      });
+
+      quoteSelect.addEventListener('change', ()=>{ syncCardHighlight(); draw(); });
+
+      // Click a card to focus
+      const cards = Array.from(document.querySelectorAll('#grid .card'));
+      cards.forEach((card, i)=>{
+        card.addEventListener('click', ()=>{
+          quoteSelect.value = String(i+1); syncCardHighlight(); draw();
+        });
+      });
+
+      function syncCardHighlight(){
+        cards.forEach(c=>c.classList.remove('active'));
+        const v = +quoteSelect.value; if(v>0) cards[v-1].classList.add('active');
+      }
+      syncCardHighlight();
+
+      function loop(t){
+        if(!running){ return; }
+        const dt = t - lastT; const step = 1000/Math.max(1,fps);
+        if(dt >= step){ frame = (frame+1)% (totalFrames+1); frameSlider.value = String(frame); lastT = t; draw(); }
+        raf = requestAnimationFrame(loop);
+      }
+
+      function draw(){
+        if(!ctx) return;
+        ctx.clearRect(0,0,W,H);
+        const cx = W/2, cy = H/2;
+        const sc = Math.min(W,H) * 0.42; // scale
+        const Nseeds = 36;               // angular seeds
+        const depth = 11;                // iterations per seed
+        const thetaShift = frame * 0.012;
+
+        const which = +quoteSelect.value; // 0 = all
+        const indices = which===0 ? [0,1,2,3,4] : [which-1];
+
+        indices.forEach((idx)=>{
+          const c = C[idx];
+          const hueStroke = colorFor(idx, 0.9);
+
+          for(let i=0;i<Nseeds;i++){
+            const a0 = (i/Nseeds)*Math.PI*2 + thetaShift;
+            // animated radius oscillation (soft breathe)
+            const r0 = 0.4 + 0.25*Math.sin((frame/40) + i*0.31 + idx*0.7);
+            let z = { re: r0*Math.cos(a0), im: r0*Math.sin(a0) };
+            for(let k=0;k<depth;k++){
+              // z = z^2 + c
+              z = cAdd(cMul(z,z), c);
+              const x = cx + sc*z.re;
+              const y = cy + sc*z.im;
+
+              // ellipse radii decay with depth; gentle pulsation by frame
+              const base = Math.max(0.8, 1.2 - k*0.08);
+              const rx = base * (8 + 4*Math.sin((frame/18) + k*0.6 + idx));
+              const ry = base * (5 + 3*Math.cos((frame/22) + k*0.5 + idx*0.4));
+              const rot = cArg(z)/2;
+
+              ctx.save();
+              ctx.translate(x,y); ctx.rotate(rot);
+              ctx.beginPath();
+              ctx.scale(rx, ry); ctx.arc(0,0,1,0,Math.PI*2); ctx.scale(1/rx,1/ry);
+              ctx.strokeStyle = hueStroke;
+              ctx.globalAlpha = 0.55 * Math.exp(-k*0.08);
+              ctx.lineWidth = 1.2;
+              ctx.stroke();
+              ctx.restore();
+            }
+          }
+        });
+      }
+
+      // Initial size & draw
+      sizeCanvas();
+    })();
+  </script>
+</body>
+</html>
