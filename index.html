@@ -109,12 +109,19 @@
 
     /* Active highlight for selected card */
     .card.active { outline: 2px solid color-mix(in oklab, var(--accent), var(--card-border) 30%); outline-offset: 2px; }
+
+    /* Diagnostics list */
+    #diagnostics { max-width: 1100px; margin: 0 auto 24px; padding: 0 20px; }
+    #testList { list-style: none; padding-left: 0; }
+    #testList li { margin: 4px 0; font-size: .92rem; }
+    .pass { color: #22c55e; }
+    .fail { color: #ef4444; }
   </style>
 </head>
 <body>
   <header>
     <h1>“Consciousness is a Blanket” — Variations</h1>
-    <p class="subtitle">Now with two fresh epigrams: “The beginnings of a technocratic proto‑religion.” and “Shining in the dark.” Explore seven mapped patterns in the animated elliptic field.</p>
+    <p class="subtitle">Now with three fresh epigrams: “The beginnings of a technocratic proto‑religion.”, “Shining in the dark.”, and “Tearing through the veil of darkness.” Explore eight mapped patterns in the animated elliptic field.</p>
     <div class="controls" role="group" aria-label="Display Controls">
       <button class="btn" id="themeToggle" aria-label="Toggle theme">🌗 Toggle theme</button>
       <div class="select-wrap" title="Choose font">
@@ -152,6 +159,7 @@
               <option value="5">5 · Street‑wise</option>
               <option value="6">6 · Proto‑religion</option>
               <option value="7">7 · Shining in the dark</option>
+              <option value="8">8 · Veil of darkness</option>
             </select>
           </div>
         </div>
@@ -159,6 +167,11 @@
       <div class="viz-canvas-wrap"><canvas id="viz"></canvas></div>
       <p class="kicker">Tip: click a quote card below to focus its pattern. Use the slider to scrub frames, or press Play to animate.</p>
     </section>
+
+    <details id="diagnostics">
+      <summary class="kicker">Diagnostics (self‑tests)</summary>
+      <ul id="testList"></ul>
+    </details>
 
     <section class="grid" id="grid">
       <!-- Card 1 -->
@@ -227,6 +240,16 @@
         <blockquote>
           <p>“Shining in the dark.”</p>
           <footer>&mdash; HM</footer>
+        </blockquote>
+        <div class="row"><button class="btn copy-btn">Copy</button></div>
+      </article>
+
+      <!-- Card 8 -->
+      <article class="card" data-quote="Tearing through the veil of darkness. — HM-RG">
+        <div class="label">8 · Veil of darkness <span class="kicker">(epigram)</span></div>
+        <blockquote>
+          <p>“Tearing through the veil of darkness.”</p>
+          <footer>&mdash; HM-RG</footer>
         </blockquote>
         <div class="row"><button class="btn copy-btn">Copy</button></div>
       </article>
@@ -310,7 +333,7 @@
       const quoteSelect = document.getElementById('quoteSelect');
       const legend = document.getElementById('legend');
 
-      // Seven constants (Julia-like), one for each quote/epigram
+      // Eight constants (Julia-like), one for each quote/epigram
       const C = [
         { re: -0.4,    im:  0.6 },
         { re:  0.285,  im:  0.0 },
@@ -318,7 +341,8 @@
         { re: -0.123,  im:  0.745 },
         { re: -0.70176,im: -0.3842 },
         { re:  0.32,   im:  0.043 },
-        { re: -0.2,    im:  0.66 }
+        { re: -0.2,    im:  0.66 },
+        { re:  0.355,  im:  0.355 }
       ];
 
       const labels = [
@@ -328,7 +352,8 @@
         '4 · Technical‑poetic',
         '5 · Street‑wise',
         '6 · Proto‑religion',
-        '7 · Shining in the dark'
+        '7 · Shining in the dark',
+        '8 · Veil of darkness'
       ];
 
       // Colors per quote (distinct hues)
@@ -377,18 +402,22 @@
         else { cancelAnimationFrame(raf); raf=null; }
       });
 
-      quoteSelect.addEventListener('change', ()=>{ syncCardHighlight(); draw(); });
+      if(quoteSelect){
+        quoteSelect.addEventListener('change', ()=>{ syncCardHighlight(); draw(); });
+      }
 
       // Click a card to focus
       const cards = Array.from(document.querySelectorAll('#grid .card'));
       cards.forEach((card, i)=>{
         card.addEventListener('click', ()=>{
+          if(!quoteSelect) return;
           quoteSelect.value = String(i+1); syncCardHighlight(); draw();
         });
       });
 
       function syncCardHighlight(){
         cards.forEach(c=>c.classList.remove('active'));
+        if(!quoteSelect) return;
         const v = +quoteSelect.value; if(v>0 && v<=cards.length) cards[v-1].classList.add('active');
       }
       syncCardHighlight();
@@ -409,7 +438,7 @@
         const depth = 11;                // iterations per seed
         const thetaShift = frame * 0.012;
 
-        const which = +quoteSelect.value; // 0 = all
+        const which = quoteSelect ? +quoteSelect.value : 0; // 0 = all
         const indices = which===0 ? [...Array(C.length).keys()] : [which-1];
 
         indices.forEach((idx)=>{
@@ -418,8 +447,7 @@
 
           for(let i=0;i<Nseeds;i++){
             const a0 = (i/Nseeds)*Math.PI*2 + thetaShift;
-            // animated radius oscillation (soft breathe)
-            const r0 = 0.4 + 0.25*Math.sin((frame/40) + i*0.31 + idx*0.7);
+            const r0 = 0.4 + 0.25*Math.sin((frame/40) + i*0.31 + idx*0.7); // soft breathe
             let z = { re: r0*Math.cos(a0), im: r0*Math.sin(a0) };
             for(let k=0;k<depth;k++){
               // z = z^2 + c
@@ -427,7 +455,6 @@
               const x = cx + sc*z.re;
               const y = cy + sc*z.im;
 
-              // ellipse radii decay with depth; gentle pulsation by frame
               const base = Math.max(0.8, 1.2 - k*0.08);
               const rx = base * (8 + 4*Math.sin((frame/18) + k*0.6 + idx));
               const ry = base * (5 + 3*Math.cos((frame/22) + k*0.5 + idx*0.4));
@@ -447,8 +474,35 @@
         });
       }
 
-      // Initial size & draw
+      // ---------- Self-tests (basic, non-blocking) ----------
+      function runTests(){
+        const tests = [];
+        function t(name, cond){ tests.push({name, pass: !!cond}); }
+        t('#quoteSelect exists', !!document.getElementById('quoteSelect'));
+        const qSel = document.getElementById('quoteSelect');
+        t('labels length = 8', labels.length === 8);
+        t('cards length = labels length', document.querySelectorAll('#grid .card').length === labels.length);
+        t('legend items = labels length', document.querySelectorAll('#legend .item').length === labels.length);
+        if(qSel){
+          t('options count = labels length + 1', qSel.options.length === labels.length + 1);
+          t('reading value does not throw', (()=>{ try{ void qSel.value; return true; } catch(e){ return false; } })());
+        }
+        const list = document.getElementById('testList');
+        list.innerHTML = '';
+        tests.forEach(({name, pass})=>{
+          const li = document.createElement('li');
+          li.className = pass ? 'pass' : 'fail';
+          li.textContent = (pass ? '✓ ' : '✗ ') + name;
+          list.appendChild(li);
+        });
+        console.group('Self-tests');
+        tests.forEach(t => console[t.pass ? 'log' : 'error'](`${t.pass?'PASS':'FAIL'} — ${t.name}`));
+        console.groupEnd();
+      }
+
+      // Initial size & draw + tests
       sizeCanvas();
+      runTests();
     })();
   </script>
 </body>
